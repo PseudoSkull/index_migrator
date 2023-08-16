@@ -16,7 +16,8 @@ Insert the relevant data into migrate_info.json, as follows:
 * pages_to_delete - Insert pages that need to be removed.
 
 Then, in your command line, move to the downloaded folder in your local system and run the file in your command line:
-python3 migrate.py
+
+```python3 migrate.py```
 
 ## What it does for you ##
 
