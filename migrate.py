@@ -7,12 +7,15 @@ from cleanup import get_commons_file_page_count
 
 migrate_info_filename = "migrate_info.json"
 migrate_info = json.load(open(migrate_info_filename, "r"))
-print(migrate_info)
 
+index_prefix = "Index:"
 original_scan_file = migrate_info["original_scan_file"]
 new_scan_file = migrate_info["new_scan_file"]
 pages_to_insert = migrate_info["pages_to_insert"]
 pages_to_delete = migrate_info["pages_to_delete"]
+pages_to_insert.sort()
+pages_to_delete.sort()
+first_page_to_insert = pages_to_insert[0]
 original_page_count = get_commons_file_page_count(original_scan_file)
 new_page_count = get_commons_file_page_count(new_scan_file)
 
@@ -29,7 +32,13 @@ def get_page_offset(pages_to_insert, pages_to_delete):
     return page_offset
 
 def get_offset_page_number(original_page_number, page_offset):
-    return original_page_number + page_offset
+    if type(original_page_number) == str:
+        original_page_number = int(original_page_number)
+    
+    if original_page_number < first_page_to_insert:
+        return str(original_page_number)
+    else:
+        return str(original_page_number + page_offset)
 
 # for now, logic later to handle multiple insertions throughout file
 page_offset = get_page_offset(pages_to_insert, pages_to_delete)
@@ -66,36 +75,60 @@ def parse_pagelist_tag(pagelist_tag):
     new_parameters = []
 
     for parameter in pagelist_parameters:
+        if parameter == "\n" or parameter == "":
+            continue
         parsed_parameter = parameter.split("=")
         actual_page_number = parsed_parameter[0]
+        parameter_value = parsed_parameter[1]
+        if "to" in actual_page_number: # 5to10=roman for example
+            page_number_to_page_number = actual_page_number.split("to")
+            new_to_page_numbers = []
+            for page_number in page_number_to_page_number:
+                new_page_number = get_offset_page_number(page_number, page_offset)
+                new_to_page_numbers.append(new_page_number)
+            actual_page_number = "to".join(new_to_page_numbers)
+        else: # 11=1 for example
+            # actual_page_number = int(actual_page_number)
+            actual_page_number = get_offset_page_number(actual_page_number, page_offset)
+        
+        new_parameter = f"{actual_page_number}={parameter_value}"
+        new_parameters.append(new_parameter)
 
+    pagelist_tag_to_use = "\n".join(new_parameters)
 
     if type(pagelist_tag) == list:
         pagelist_tag = pagelist_tag_beginning + "\n" + pagelist_tag_to_use
     else:
         pagelist_tag = pagelist_tag_to_use
-    
+
     return pagelist_tag
 
 def parse_index_page(index_page_text):
-    # parse pages tag:
+
+    # Parse pages tag
+
     pagelist_tag_pattern = r"<pagelist\n(.*)\n\/>"
-    pagelist_tag = re.search(pagelist_tag_pattern, index_page_text).group(1)
+    pagelist_tag = re.search(pagelist_tag_pattern, index_page_text, re.DOTALL).group(1)
     pagelist_tag = parse_pagelist_tag(pagelist_tag)
     index_page_text = re.sub(pagelist_tag_pattern, pagelist_tag, index_page_text)
 
-    # parse cover image parameter
+    print(pagelist_tag)
+    # Parse cover image parameter if needed
 
 
 def migrate_index_page():
     site = pywikibot.Site("en", "wikisource")
-    original_index_page = pywikibot.Page(site, original_scan_file)
-    new_index_page = pywikibot.Page(site, new_scan_file)
+    original_index_page_title = index_prefix + original_scan_file
+    new_index_page_title = index_prefix + new_scan_file
+    original_index_page = pywikibot.Page(site, original_index_page_title)
+    new_index_page = pywikibot.Page(site, new_index_page_title)
 
     original_index_page_text = original_index_page.text
     new_index_page_text = new_index_page.text
 
     new_pagelist_tag = parse_index_page(original_index_page_text)
+
+    print(new_pagelist_tag)
 
 
 
@@ -109,5 +142,6 @@ def migrate_index_page():
 
 ############# MAIN #############
 
-def __main__():
-    check_page_count_with_page_offset()
+check_page_count_with_page_offset()
+
+migrate_index_page()
