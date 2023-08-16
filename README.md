@@ -27,6 +27,6 @@ Then, in your command line, move to the downloaded folder in your local system a
 
 ## To do in the future ##
 
-* Make this work for pages that need to be removed.
-* Make this work for the same scan file, and not just a different scan.
-* Allow 
+* Remove pages from work (move pages left)
+* Move pages within a single index (not to be migrated)
+* Switch pages around (for example switch 11 with 13)

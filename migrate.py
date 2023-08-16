@@ -31,7 +31,9 @@ def get_page_offset(pages_to_insert, pages_to_delete):
     page_offset = number_of_pages_to_insert - number_of_pages_to_delete
     return page_offset
 
-def get_offset_page_number(original_page_number, page_offset):
+# Last parameter for dev testing only
+
+def get_offset_page_number(original_page_number, page_offset, first_page_to_insert=first_page_to_insert):
     if type(original_page_number) == str:
         original_page_number = int(original_page_number)
     
@@ -61,6 +63,9 @@ def check_page_count_with_page_offset():
 
 
 ############# INDEX MIGRATION #############
+
+def reconstruct_index_content(replacement):
+    return 
 
 def parse_pagelist_tag(pagelist_tag):
     if "\n-\n" in pagelist_tag:
@@ -108,12 +113,22 @@ def parse_index_page(index_page_text):
     # Parse pages tag
 
     pagelist_tag_pattern = r"<pagelist\n(.*)\n\/>"
-    pagelist_tag = re.search(pagelist_tag_pattern, index_page_text, re.DOTALL).group(1)
-    pagelist_tag = parse_pagelist_tag(pagelist_tag)
-    index_page_text = re.sub(pagelist_tag_pattern, pagelist_tag, index_page_text)
+    old_pagelist_tag = re.search(pagelist_tag_pattern, index_page_text, re.DOTALL).group(1)
+    new_pagelist_tag = parse_pagelist_tag(old_pagelist_tag)
+    index_page_text = re.sub(old_pagelist_tag, new_pagelist_tag, index_page_text)
 
-    print(pagelist_tag)
+    # print(index_page_text)
     # Parse cover image parameter if needed
+
+    first_page_to_insert = 2
+    cover_image_parameter_pattern = r"\|Image=([0-9]*)\n"
+    old_cover_image_value = re.search(cover_image_parameter_pattern, index_page_text, re.DOTALL).group(1)
+    new_cover_image_value = get_offset_page_number(old_cover_image_value, page_offset, first_page_to_insert=2)
+    index_page_text = re.sub(cover_image_parameter_pattern, f"|Image={new_cover_image_value}\n", index_page_text)
+
+    print(index_page_text)
+
+
 
 
 def migrate_index_page():
@@ -126,9 +141,9 @@ def migrate_index_page():
     original_index_page_text = original_index_page.text
     new_index_page_text = new_index_page.text
 
-    new_pagelist_tag = parse_index_page(original_index_page_text)
+    new_index_page_content = parse_index_page(original_index_page_text)
 
-    print(new_pagelist_tag)
+    print(new_index_page_content)
 
 
 
