@@ -10,10 +10,11 @@ This is a tool for migrating Index pages or Page namespace pages. The tool shoul
 ## Usage instructions ##
 
 Insert the relevant data into migrate_info.json, as follows:
+* requesting_user - The MediaWiki username of the person who requested the migration, for reference in the edit summaries
 * original_scan_file - The original scan filename, as it appears on Wikimedia Commons, in string format
 * new_scan_file - If applicable, the new scan filename, as it appears on Wikimedia Commons, in string format. If not applicable, use an empty string ("") or null value.
-* pages_to_insert - Insert pages to insert, as numbers, in array format.
-* pages_to_delete - Insert pages that need to be removed.
+* pages_to_insert - Pages to insert, as numbers, in array format
+* pages_to_delete - Pages that need to be removed, as numbers, in array format
 
 (A sample json file is provided in the repository, as an example of a working one.)
 
@@ -30,8 +31,7 @@ Then, in your command line, move to the downloaded folder in your local system a
 * Automatically reconfigures the index page pagelist and cover image page number according to the page offset.
 
 ## Milestones ##
-* 08/17/2023: Index:The Revolt of the Angels.pdf -> Index:The Revolt of the Angels v2.djvu, as requested by SpikeShroom
-** First ever migrated index page with this application
+* 08/17/2023: Index:The Revolt of the Angels.pdf -> Index:The Revolt of the Angels v2.djvu, as requested by SpikeShroom — First ever migrated index page with this application
 
 ## To do in the future ##
 
