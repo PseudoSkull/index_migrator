@@ -2,13 +2,14 @@ import json
 import pywikibot
 import re
 from debug import print_in_red, print_in_green, print_in_yellow, print_in_blue, process_break
-from edit_mw import save_page
+from edit_mw import save_page, edit_summary
 from cleanup import get_commons_file_page_count
 
 migrate_info_filename = "migrate_info.json"
 migrate_info = json.load(open(migrate_info_filename, "r"))
 
 index_prefix = "Index:"
+requesting_user = migrate_info["requesting_user"]
 original_scan_file = migrate_info["original_scan_file"]
 new_scan_file = migrate_info["new_scan_file"]
 pages_to_insert = migrate_info["pages_to_insert"]
@@ -120,13 +121,12 @@ def parse_index_page(index_page_text):
     # print(index_page_text)
     # Parse cover image parameter if needed
 
-    first_page_to_insert = 2
     cover_image_parameter_pattern = r"\|Image=([0-9]*)\n"
     old_cover_image_value = re.search(cover_image_parameter_pattern, index_page_text, re.DOTALL).group(1)
-    new_cover_image_value = get_offset_page_number(old_cover_image_value, page_offset, first_page_to_insert=2)
+    new_cover_image_value = get_offset_page_number(old_cover_image_value, page_offset)
     index_page_text = re.sub(cover_image_parameter_pattern, f"|Image={new_cover_image_value}\n", index_page_text)
 
-    print(index_page_text)
+    return index_page_text
 
 
 
@@ -136,22 +136,48 @@ def migrate_index_page():
     original_index_page_title = index_prefix + original_scan_file
     new_index_page_title = index_prefix + new_scan_file
     original_index_page = pywikibot.Page(site, original_index_page_title)
-    new_index_page = pywikibot.Page(site, new_index_page_title)
 
     original_index_page_text = original_index_page.text
-    new_index_page_text = new_index_page.text
+
+    move_page_without_redirect(original_index_page_title, new_index_page_title, "index")
+
+    new_index_page = pywikibot.Page(site, new_index_page_title)
 
     new_index_page_content = parse_index_page(original_index_page_text)
 
-    print(new_index_page_content)
+    save_page(new_index_page, new_index_page_content, edit_summary(f"Modifying new index page content to reflect page offset..."))
 
+
+
+def move_page_without_redirect(source_title, target_title, page_type):
+    site = pywikibot.Site("en", "wikisource")
+    source_page = pywikibot.Page(site, source_title)
+    move_summary = edit_summary(f"Migrating {page_type} to fixed scan, according to page offset, as requested by {requesting_user}")
+    print(move_summary)
+    # print(f"{target_title} <- {source_title}")
+    if source_page.exists():
+        source_page.move(target_title, reason=move_summary, noredirect=True, subpages=True)
+        print_in_green("Move performed successfully!")
+    else:
+        print_in_yellow(f"Source page {source_title} does not exist. Skipping...")
 
 
 
 
 ############# PAGE NAMESPACE MIGRATION #############
 
+def move_pages_in_page_namespace():
+    original_page_num = 1
 
+    # page_offset = 0
+
+    for new_page_num in range(1, new_page_count + 1):
+        if new_page_num in pages_to_insert:
+            continue
+        source_title = f"Page:{original_scan_file}/{original_page_num}"
+        target_title = f"Page:{new_scan_file}/{new_page_num}"
+        move_page_without_redirect(source_title, target_title, "page")
+        original_page_num += 1
 
 
 
@@ -160,3 +186,5 @@ def migrate_index_page():
 check_page_count_with_page_offset()
 
 migrate_index_page()
+
+move_pages_in_page_namespace()

@@ -15,6 +15,8 @@ Insert the relevant data into migrate_info.json, as follows:
 * pages_to_insert - Insert pages to insert, as numbers, in array format.
 * pages_to_delete - Insert pages that need to be removed.
 
+(A sample json file is provided in the repository, as an example of a working one.)
+
 Then, in your command line, move to the downloaded folder in your local system and run the file in your command line:
 
 ```python3 migrate.py```
@@ -25,8 +27,12 @@ Then, in your command line, move to the downloaded folder in your local system a
 * Moves the index page to the new scan file (if this hasn't already been done).
 * Moves the pages according to the page offset parameters in the JSON file.
 
+* Automatically reconfigures the index page pagelist and cover image page number according to the page offset.
+
 ## To do in the future ##
 
 * Remove pages from work (move pages left)
 * Move pages within a single index (not to be migrated)
 * Switch pages around (for example switch 11 with 13)
+* Fix transclused pages of broken index page.
+* Make it work with films, for all of the above!
