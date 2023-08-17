@@ -29,8 +29,13 @@ Then, in your command line, move to the downloaded folder in your local system a
 
 * Automatically reconfigures the index page pagelist and cover image page number according to the page offset.
 
+## Milestones ##
+* 08/17/2023: Index:The Revolt of the Angels.pdf -> Index:The Revolt of the Angels v2.djvu, as requested by SpikeShroom
+** First ever migrated index page with this application
+
 ## To do in the future ##
 
+* Automatically fix all instances of "What links here" to each of the pages
 * Remove pages from work (move pages left)
 * Move pages within a single index (not to be migrated)
 * Switch pages around (for example switch 11 with 13)
