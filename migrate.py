@@ -145,7 +145,7 @@ def migrate_index_page():
 
     new_index_page_content = parse_index_page(original_index_page_text)
 
-    save_page(new_index_page, site, new_index_page_content, edit_summary(f"Modifying new index page content to reflect page offset..."))
+    save_page(new_index_page, site, new_index_page_content, f"Modifying new index page content to reflect page offset...")
 
 
 
