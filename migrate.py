@@ -3,7 +3,7 @@ import pywikibot
 import re
 from debug import print_in_red, print_in_green, print_in_yellow, print_in_blue, process_break
 from edit_mw import save_page, edit_summary
-from cleanup import get_commons_file_page_count
+from cleanup import get_commons_file_page_count, remove_triple_newlines
 
 migrate_info_filename = "migrate_info.json"
 migrate_info = json.load(open(migrate_info_filename, "r"))
@@ -16,7 +16,10 @@ pages_to_insert = migrate_info["pages_to_insert"]
 pages_to_delete = migrate_info["pages_to_delete"]
 pages_to_insert.sort()
 pages_to_delete.sort()
-first_page_to_insert = pages_to_insert[0]
+try:
+    first_page_to_insert = pages_to_insert[0]
+except IndexError:
+    first_page_to_insert = None
 original_page_count = get_commons_file_page_count(original_scan_file)
 new_page_count = get_commons_file_page_count(new_scan_file)
 
@@ -140,6 +143,7 @@ def migrate_index_page():
     original_index_page_text = original_index_page.text
 
     move_page_without_redirect(original_index_page_title, new_index_page_title, "index")
+    return
 
     new_index_page = pywikibot.Page(site, new_index_page_title)
 
@@ -167,7 +171,7 @@ def move_page_without_redirect(source_title, target_title, page_type):
 ############# PAGE NAMESPACE MIGRATION #############
 
 def move_pages_in_page_namespace(first_page=1, new_page_count=new_page_count):
-    original_page_num = 1
+    original_page_num = 92
 
     # page_offset = 0
 
@@ -180,11 +184,48 @@ def move_pages_in_page_namespace(first_page=1, new_page_count=new_page_count):
         original_page_num += 1
 
 
+# What links here
+
+def get_index_backlinks():
+    site = pywikibot.Site("en", "wikisource")
+    original_index_page_title = index_prefix + original_scan_file
+    original_index_page = pywikibot.Page(site, original_index_page_title)
+    original_index_backlinks = list(original_index_page.backlinks())
+    original_transcluded_pages = list(original_index_page.embeddedin())
+    backlinks = original_index_backlinks + original_transcluded_pages
+    return backlinks
+    # print(index_page_text)
+    # print(index_page_wikilinks)
+    # print(index_pa
+
+def fix_index_backlinks():
+    site = pywikibot.Site("en", "wikisource")
+    backlinks = get_index_backlinks()
+    for backlink in backlinks:
+        backlink_text = backlink.text
+        backlink_edit_summary = "Fixing index backlinks to reflect recent migration to new index"
+
+        backlink_text = backlink_text.replace(original_scan_file, "Report of the Commission of Enquiry North Borneo & Sarawak.pdf")
+
+        # temporary
+        if "Report of the Commission of Enquiry, North Borneo and Sarawak, 1962" in backlink.title():
+            backlink_text = backlink_text.replace("{{OGL|2=legislation}}", "")
+            backlink_text = remove_triple_newlines(backlink_text)
+
+            backlink_edit_summary += ", and removing copyright template from chapter subpage, since the chapter doesn't have a separate copyright status or author so that template is redundant here"
+        
+        save_page(backlink, site, backlink_text, backlink_edit_summary)
+
+
+
+
 
 ############# MAIN #############
 
-check_page_count_with_page_offset()
+# check_page_count_with_page_offset()
 
-migrate_index_page()
+# migrate_index_page()
 
-move_pages_in_page_namespace()
+# move_pages_in_page_namespace(first_page=3, new_page_count=27)
+
+fix_index_backlinks()
