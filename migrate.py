@@ -166,12 +166,12 @@ def move_page_without_redirect(source_title, target_title, page_type):
 
 ############# PAGE NAMESPACE MIGRATION #############
 
-def move_pages_in_page_namespace():
+def move_pages_in_page_namespace(first_page=1, new_page_count=new_page_count):
     original_page_num = 1
 
     # page_offset = 0
 
-    for new_page_num in range(1, new_page_count + 1):
+    for new_page_num in range(first_page, new_page_count + 1):
         if new_page_num in pages_to_insert:
             continue
         source_title = f"Page:{original_scan_file}/{original_page_num}"
